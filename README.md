@@ -98,6 +98,9 @@ Run tests:
 pnpm test
 ```
 
+**Note:** The project uses ES modules (`import`/`export` syntax) with Jest, which requires the `--experimental-vm-modules` flag. 
+This is handled automatically in the test scripts and is a common approach for modern JavaScript projects until Jest has full native ES module support.
+
 ## Jira Issue Key Format
 
 The tool recognizes Jira issue keys in the format: `[A-Z][A-Z0-9]+-\d+`
