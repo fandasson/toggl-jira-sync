@@ -6,12 +6,20 @@ import dayjs from 'dayjs';
 import inquirer from 'inquirer';
 import Table from 'cli-table3';
 
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
 import { config, validateConfig } from './config.js';
 import { TogglClient } from './api/toggl.js';
 import { JiraClient } from './api/jira.js';
 import { parseTimeEntry, groupEntriesByDescription, groupEntriesByIssueKey } from './utils/parser.js';
 import { prepareSummaryData, formatDuration } from './utils/formatter.js';
 import { SyncHistory } from './utils/syncHistory.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const packageJson = JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf8'));
 
 async function displaySummary(summary) {
   console.log('\n' + chalk.bold('=== SUMMARY ==='));
@@ -257,7 +265,7 @@ async function historyClearCommand() {
 program
   .name('toggl-jira')
   .description('Sync time entries from Toggl Track to Jira work logs')
-  .version('1.0.0');
+  .version(packageJson.version);
 
 program
   .command('sync')

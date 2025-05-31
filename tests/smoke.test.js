@@ -1,10 +1,12 @@
 import { spawn } from 'child_process';
+import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const CLI_PATH = join(__dirname, '..', 'src', 'index.js');
+const packageJson = JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf8'));
 
 function runCLI(args = [], timeout = 5000, clearEnv = false) {
   return new Promise((resolve, reject) => {
@@ -70,7 +72,7 @@ describe('CLI Smoke Tests', () => {
     const result = await runCLI(['--version']);
     
     expect(result.code).toBe(0);
-    expect(result.stdout).toContain('1.0.0');
+    expect(result.stdout).toContain(packageJson.version);
   });
 
   test('sync command shows help', async () => {
