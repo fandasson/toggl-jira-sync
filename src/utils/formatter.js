@@ -1,0 +1,57 @@
+import dayjs from 'dayjs';
+import duration from 'dayjs/plugin/duration.js';
+
+dayjs.extend(duration);
+
+export function formatDuration(seconds) {
+  const dur = dayjs.duration(seconds, 'seconds');
+  const hours = Math.floor(dur.asHours());
+  const minutes = dur.minutes();
+  
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`;
+  }
+  return `${minutes}m`;
+}
+
+export function formatJiraWorkLog(issueKey, entries) {
+  const totalSeconds = entries.reduce((sum, entry) => sum + entry.durationSeconds, 0);
+  const descriptions = [...new Set(entries.map(e => e.description))];
+  
+  return {
+    issueKey,
+    timeSpentSeconds: totalSeconds,
+    timeSpentFormatted: formatDuration(totalSeconds),
+    startedAt: entries[0].startedAt,
+    comment: descriptions.join('; '),
+    entryCount: entries.length
+  };
+}
+
+export function prepareSummaryData(jiraEntries, nonJiraEntries) {
+  const jiraSummary = Object.entries(jiraEntries).map(([issueKey, group]) => {
+    return formatJiraWorkLog(issueKey, group.entries);
+  });
+
+  const nonJiraSummary = nonJiraEntries.map(group => ({
+    description: group.description,
+    totalTime: formatDuration(group.totalSeconds),
+    entryCount: group.entries.length
+  }));
+
+  const totalJiraTime = jiraSummary.reduce((sum, item) => sum + item.timeSpentSeconds, 0);
+  const totalNonJiraTime = nonJiraEntries.reduce((sum, group) => sum + group.totalSeconds, 0);
+
+  return {
+    jiraWorkLogs: jiraSummary,
+    nonJiraEntries: nonJiraSummary,
+    totals: {
+      jiraTime: formatDuration(totalJiraTime),
+      jiraTimeSeconds: totalJiraTime,
+      nonJiraTime: formatDuration(totalNonJiraTime),
+      nonJiraTimeSeconds: totalNonJiraTime,
+      totalTime: formatDuration(totalJiraTime + totalNonJiraTime),
+      totalTimeSeconds: totalJiraTime + totalNonJiraTime
+    }
+  };
+}
