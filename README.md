@@ -40,9 +40,14 @@ A CLI tool to sync time entries from Toggl Track to Jira work logs.
 
 ### Jira API Token
 1. Go to https://id.atlassian.com/manage-profile/security/api-tokens
-2. Create a new scoped API token with the following scopes:
-   - `read:jira-work` - Required to read issue information
-   - `write:issue-worklog:jira` - Required to create work logs
+2. Create non-scoped token as scoped tokens doesn't work for [bug in JIRA API](https://jira.atlassian.com/browse/JRACLOUD-94545)
+2. ~~Create a new scoped API token with the following scopes:~~
+     - `read:jira-work`
+     - `write:jira-work`
+     - `read:issue-worklog:jira`
+     - `write:issue-worklog:jira`
+     - `read:issue-worklog.property:jira`
+     - `write:issue-worklog.property:jira`
 3. Copy the token value
 
 ## Usage
@@ -111,6 +116,34 @@ Examples:
 - TEST-1
 
 The issue key can appear anywhere in the description.
+
+## Troubleshooting
+
+### Jira API Errors
+
+If you encounter "400 Bad Request" errors when creating work logs:
+
+1. **Check API Token Scopes**: Ensure your Jira API token has both:
+   - `read:jira-work` - Required to read issue information
+   - `write:issue-worklog:jira` - Required to create work logs
+   - write:jira-work
+     write:issue-worklog.property:jira
+     read:group:jira
+     read:issue-worklog:jira
+
+2. **Verify Issue Access**: Make sure the Jira issue exists and you have permission to log work on it
+
+3. **Check Issue Status**: Some Jira workflows prevent work logging on closed or certain status issues
+
+4. **Date Format Issues**: The tool automatically formats dates to ISO format (e.g., `2024-01-01T10:30:00.000Z`) which should work with all Jira instances
+
+5. **Test with Dry Run**: Use `--dry-run` flag first to verify the tool can fetch and parse your Toggl entries correctly
+
+### Common Issues
+
+- **"No time entries found"**: Check your Toggl workspace and project IDs in the `.env` file
+- **"Missing required environment variables"**: Ensure all required variables are set in your `.env` file
+- **Permission errors**: Verify your API tokens have the necessary scopes and permissions
 
 ## Note on Sync History
 
