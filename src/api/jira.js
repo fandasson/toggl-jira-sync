@@ -1,6 +1,9 @@
 import axios from 'axios';
 import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc.js';
 import { config } from '../config.js';
+
+dayjs.extend(utc);
 
 export class JiraClient {
   constructor() {
@@ -21,15 +24,29 @@ export class JiraClient {
     try {
       const payload = {
         timeSpentSeconds,
-        started: dayjs(startedAt).format('YYYY-MM-DDTHH:mm:ss.SSSZ'),
-        comment: comment || 'Logged from Toggl Track'
+        started: dayjs(startedAt).utc().format('YYYY-MM-DDTHH:mm:ss.SSS') + '+0000',
+        comment: {
+          type: 'doc',
+          version: 1,
+          content: [
+            {
+              type: 'paragraph',
+              content: [
+                {
+                  text: comment || 'Logged from Toggl Track',
+                  type: 'text'
+                }
+              ]
+            }
+          ]
+        }
       };
 
       const response = await this.client.post(
         `/issue/${issueKey}/worklog`,
         payload
       );
-      
+
       return response.data;
     } catch (error) {
       if (error.response) {
@@ -56,7 +73,7 @@ export class JiraClient {
           workLog.startedAt,
           workLog.comment
         );
-        
+
         results.successful.push({
           ...workLog,
           workLogId: result.id
