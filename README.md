@@ -10,6 +10,8 @@ A CLI tool to sync time entries from Toggl Track to Jira work logs.
 - Shows summary of time entries with and without Jira issues
 - Creates work logs in Jira with confirmation prompt
 - Dry-run mode to preview changes without creating work logs
+- **Remembers synced entries** - Automatically ignores already synced Toggl records
+- **Sync history management** - View statistics and clear history when needed
 
 ## Installation
 
@@ -65,17 +67,29 @@ node src/index.js sync --dry-run
 node src/index.js config
 ```
 
+### Manage sync history
+```bash
+# View sync history statistics
+node src/index.js history:view
+
+# Clear all sync history (requires confirmation)
+node src/index.js history:clear
+```
+
 ## How it works
 
 1. The tool fetches time entries from Toggl for the specified date range
-2. It parses each entry's description looking for Jira issue keys (e.g., ABC-123)
-3. Entries with Jira keys are grouped by issue
-4. A summary table is displayed showing:
+2. It filters out entries that have already been synced (stored in local `.sync-history.json`)
+3. It parses each remaining entry's description looking for Jira issue keys (e.g., ABC-123)
+4. Entries with Jira keys are grouped by issue
+5. A summary table is displayed showing:
+   - Already synced entries (ignored)
    - Work logs to be created in Jira
    - Time entries without Jira issue keys
    - Total time breakdown
-5. You're prompted to confirm before creating work logs in Jira
-6. Work logs are created in batch with results displayed
+6. You're prompted to confirm before creating work logs in Jira
+7. Work logs are created in batch with results displayed
+8. Successfully synced entries are saved to local history to prevent re-syncing
 
 ## Testing
 
@@ -94,3 +108,7 @@ Examples:
 - TEST-1
 
 The issue key can appear anywhere in the description.
+
+## Note on Sync History
+
+The tool automatically tracks synced entries in `.sync-history.json` to prevent duplicate work logs. This file is gitignored and stays local to your machine. You can safely run the sync multiple times without worrying about creating duplicate entries in Jira.

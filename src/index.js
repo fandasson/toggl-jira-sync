@@ -10,10 +10,31 @@ import { config, validateConfig } from './config.js';
 import { TogglClient } from './api/toggl.js';
 import { JiraClient } from './api/jira.js';
 import { parseTimeEntry, groupEntriesByDescription, groupEntriesByIssueKey } from './utils/parser.js';
-import { prepareSummaryData } from './utils/formatter.js';
+import { prepareSummaryData, formatDuration } from './utils/formatter.js';
+import { SyncHistory } from './utils/syncHistory.js';
 
 async function displaySummary(summary) {
   console.log('\n' + chalk.bold('=== SUMMARY ==='));
+  
+  // Display already synced entries
+  if (summary.alreadySynced && summary.alreadySynced.length > 0) {
+    console.log('\n' + chalk.gray.bold('Already synced entries (ignored):'));
+    const syncedTable = new Table({
+      head: ['Issue Key', 'Time', 'Description', 'Entries'],
+      colWidths: [15, 10, 50, 10]
+    });
+    
+    summary.alreadySynced.forEach(item => {
+      syncedTable.push([
+        item.issueKey,
+        item.timeFormatted,
+        item.description.substring(0, 47) + (item.description.length > 47 ? '...' : ''),
+        item.entryCount
+      ]);
+    });
+    
+    console.log(syncedTable.toString());
+  }
   
   // Display Jira work logs
   if (summary.jiraWorkLogs.length > 0) {
@@ -56,7 +77,10 @@ async function displaySummary(summary) {
   
   // Display totals
   console.log('\n' + chalk.bold('Totals:'));
-  console.log(`  Jira time: ${chalk.green(summary.totals.jiraTime)}`);
+  if (summary.totals.alreadySyncedTime) {
+    console.log(`  Already synced: ${chalk.gray(summary.totals.alreadySyncedTime)}`);
+  }
+  console.log(`  Jira time (new): ${chalk.green(summary.totals.jiraTime)}`);
   console.log(`  Non-Jira time: ${chalk.yellow(summary.totals.nonJiraTime)}`);
   console.log(`  Total time: ${chalk.cyan(summary.totals.totalTime)}`);
 }
@@ -86,16 +110,29 @@ async function syncCommand(options) {
     
     console.log(chalk.green(`Found ${timeEntries.length} time entries.`));
     
-    // Parse and group entries
+    // Initialize sync history
+    const syncHistory = new SyncHistory();
+    
+    // Parse entries
     const parsedEntries = timeEntries.map(parseTimeEntry);
-    const jiraEntries = parsedEntries.filter(e => e.hasJiraIssue);
-    const nonJiraEntries = parsedEntries.filter(e => !e.hasJiraIssue);
+    
+    // Filter out already synced entries
+    const { synced: alreadySyncedEntries, unsynced: unsyncedEntries } = syncHistory.filterUnsyncedEntries(parsedEntries);
+    
+    if (alreadySyncedEntries.length > 0) {
+      console.log(chalk.gray(`${alreadySyncedEntries.length} entries already synced and will be ignored.`));
+    }
+    
+    // Separate unsynced entries
+    const jiraEntries = unsyncedEntries.filter(e => e.hasJiraIssue);
+    const nonJiraEntries = unsyncedEntries.filter(e => !e.hasJiraIssue);
     
     const groupedJiraEntries = groupEntriesByIssueKey(jiraEntries);
     const groupedNonJiraEntries = groupEntriesByDescription(nonJiraEntries);
+    const groupedAlreadySynced = syncHistory.groupSyncedEntriesByIssue(alreadySyncedEntries);
     
     // Prepare summary
-    const summary = prepareSummaryData(groupedJiraEntries, groupedNonJiraEntries);
+    const summary = prepareSummaryData(groupedJiraEntries, groupedNonJiraEntries, groupedAlreadySynced);
     
     // Display summary
     await displaySummary(summary);
@@ -133,6 +170,20 @@ async function syncCommand(options) {
     // Display results
     if (results.successful.length > 0) {
       console.log(chalk.green(`✓ Successfully created ${results.successful.length} work log(s).`));
+      
+      // Save successful syncs to history
+      results.successful.forEach(workLog => {
+        const issueEntries = groupedJiraEntries[workLog.issueKey];
+        if (issueEntries) {
+          syncHistory.markEntriesAsSynced(
+            issueEntries.entries,
+            workLog.issueKey,
+            workLog.workLogId
+          );
+        }
+      });
+      
+      console.log(chalk.gray('Sync history updated.'));
     }
     
     if (results.failed.length > 0) {
@@ -161,6 +212,47 @@ async function configCommand() {
   console.log('\n' + chalk.yellow('To update configuration, please edit the .env file.'));
 }
 
+async function historyViewCommand() {
+  const syncHistory = new SyncHistory();
+  const stats = syncHistory.getStats();
+
+  if (stats.totalEntries === 0) {
+    console.log(chalk.yellow('No sync history found.'));
+    return;
+  }
+
+  console.log(chalk.cyan('Sync History Statistics:'));
+  console.log(`  Total synced entries: ${stats.totalEntries}`);
+  console.log(`  Total synced time: ${formatDuration(stats.totalSeconds)}`);
+  console.log(`  Unique Jira issues: ${stats.uniqueIssues}`);
+  
+  if (stats.issues.length > 0) {
+    console.log('\n' + chalk.cyan('Synced issues:'));
+    stats.issues.forEach(issue => {
+      console.log(`  - ${issue}`);
+    });
+  }
+}
+
+async function historyClearCommand() {
+  const { confirmed } = await inquirer.prompt([
+    {
+      type: 'confirm',
+      name: 'confirmed',
+      message: 'Are you sure you want to clear all sync history? This cannot be undone.',
+      default: false
+    }
+  ]);
+
+  if (confirmed) {
+    const syncHistory = new SyncHistory();
+    syncHistory.clear();
+    console.log(chalk.green('Sync history cleared.'));
+  } else {
+    console.log(chalk.yellow('Clear cancelled.'));
+  }
+}
+
 // Set up CLI
 program
   .name('toggl-jira')
@@ -179,5 +271,15 @@ program
   .command('config')
   .description('Show current configuration')
   .action(configCommand);
+
+program
+  .command('history:view')
+  .description('View sync history statistics')
+  .action(historyViewCommand);
+
+program
+  .command('history:clear')
+  .description('Clear all sync history')
+  .action(historyClearCommand);
 
 program.parse();

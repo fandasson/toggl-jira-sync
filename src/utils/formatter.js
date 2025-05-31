@@ -28,7 +28,7 @@ export function formatJiraWorkLog(issueKey, entries) {
   };
 }
 
-export function prepareSummaryData(jiraEntries, nonJiraEntries) {
+export function prepareSummaryData(jiraEntries, nonJiraEntries, alreadySyncedEntries = {}) {
   const jiraSummary = Object.entries(jiraEntries).map(([issueKey, group]) => {
     return formatJiraWorkLog(issueKey, group.entries);
   });
@@ -39,19 +39,30 @@ export function prepareSummaryData(jiraEntries, nonJiraEntries) {
     entryCount: group.entries.length
   }));
 
+  const alreadySyncedSummary = Object.entries(alreadySyncedEntries).map(([issueKey, group]) => ({
+    issueKey,
+    timeFormatted: formatDuration(group.totalSeconds),
+    description: [...new Set(group.entries.map(e => e.description))].join('; '),
+    entryCount: group.entries.length
+  }));
+
   const totalJiraTime = jiraSummary.reduce((sum, item) => sum + item.timeSpentSeconds, 0);
   const totalNonJiraTime = nonJiraEntries.reduce((sum, group) => sum + group.totalSeconds, 0);
+  const totalAlreadySyncedTime = Object.values(alreadySyncedEntries).reduce((sum, group) => sum + group.totalSeconds, 0);
 
   return {
     jiraWorkLogs: jiraSummary,
     nonJiraEntries: nonJiraSummary,
+    alreadySynced: alreadySyncedSummary,
     totals: {
       jiraTime: formatDuration(totalJiraTime),
       jiraTimeSeconds: totalJiraTime,
       nonJiraTime: formatDuration(totalNonJiraTime),
       nonJiraTimeSeconds: totalNonJiraTime,
-      totalTime: formatDuration(totalJiraTime + totalNonJiraTime),
-      totalTimeSeconds: totalJiraTime + totalNonJiraTime
+      alreadySyncedTime: totalAlreadySyncedTime > 0 ? formatDuration(totalAlreadySyncedTime) : null,
+      alreadySyncedTimeSeconds: totalAlreadySyncedTime,
+      totalTime: formatDuration(totalJiraTime + totalNonJiraTime + totalAlreadySyncedTime),
+      totalTimeSeconds: totalJiraTime + totalNonJiraTime + totalAlreadySyncedTime
     }
   };
 }
