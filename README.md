@@ -15,6 +15,14 @@ A CLI tool to sync time entries from Toggl Track to Jira work logs.
 
 ## Installation
 
+### From npm (recommended)
+
+```bash
+npm install -g toggl-jira-sync
+```
+
+### From source
+
 1. Clone this repository
 2. Install dependencies:
    ```bash
@@ -54,31 +62,47 @@ A CLI tool to sync time entries from Toggl Track to Jira work logs.
 
 ### Sync today's entries
 ```bash
+# If installed globally via npm
+toggl-jira sync
+
+# If running from source
 node src/index.js sync
 ```
 
 ### Sync specific date range
 ```bash
+# If installed globally via npm
+toggl-jira sync --from 2024-01-01 --to 2024-01-31
+
+# If running from source
 node src/index.js sync --from 2024-01-01 --to 2024-01-31
 ```
 
 ### Dry run (preview without creating work logs)
 ```bash
+# If installed globally via npm
+toggl-jira sync --dry-run
+
+# If running from source
 node src/index.js sync --dry-run
 ```
 
 ### Show configuration
 ```bash
+# If installed globally via npm
+toggl-jira config
+
+# If running from source
 node src/index.js config
 ```
 
 ### Manage sync history
 ```bash
 # View sync history statistics
-node src/index.js history:view
+toggl-jira history:view  # (or node src/index.js history:view from source)
 
 # Clear all sync history (requires confirmation)
-node src/index.js history:clear
+toggl-jira history:clear  # (or node src/index.js history:clear from source)
 ```
 
 ## How it works
@@ -120,15 +144,7 @@ The issue key can appear anywhere in the description.
 
 If you encounter "400 Bad Request" errors when creating work logs:
 
-1. **Check API Token Scopes**: Ensure your Jira API token has both:
-   - `read:jira-work` - Required to read issue information
-   - `write:issue-worklog:jira` - Required to create work logs
-   - write:jira-work
-     write:issue-worklog.property:jira
-     read:group:jira
-     read:issue-worklog:jira
-
-2. **Verify Issue Access**: Make sure the Jira issue exists and you have permission to log work on it
+1. **Verify Issue Access**: Make sure the Jira issue exists and you have permission to log work on it
 
 3. **Check Issue Status**: Some Jira workflows prevent work logging on closed or certain status issues
 
