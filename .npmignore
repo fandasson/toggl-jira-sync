@@ -1,0 +1,38 @@
+# Test files
+tests/
+vitest.config.js
+*.test.js
+
+# Development files
+.env
+.env.example
+.sync-history.json
+
+# CI/CD
+.github/
+.claude/
+
+# Git
+.git/
+.gitignore
+
+# Dependencies
+node_modules/
+pnpm-lock.yaml
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Documentation source files that aren't needed in package
+CONTRIBUTING.md

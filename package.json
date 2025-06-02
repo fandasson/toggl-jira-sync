@@ -1,6 +1,6 @@
 {
   "name": "toggl-jira-sync",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "CLI tool to sync Toggl Track time entries to Jira work logs",
   "main": "src/index.js",
   "bin": {
@@ -9,10 +9,33 @@
   "type": "module",
   "scripts": {
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "prepublishOnly": "pnpm test"
   },
+  "keywords": [
+    "toggl",
+    "jira",
+    "time-tracking",
+    "cli"
+  ],
   "author": "František Pác",
   "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fandasson/toggl-jira-sync.git"
+  },
+  "bugs": {
+    "url": "https://github.com/fandasson/toggl-jira-sync/issues"
+  },
+  "homepage": "https://github.com/fandasson/toggl-jira-sync#readme",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "files": [
+    "src/",
+    "README.md",
+    "LICENSE"
+  ],
   "dependencies": {
     "axios": "^1.9.0",
     "chalk": "^5.4.1",
