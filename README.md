@@ -1,6 +1,6 @@
 # Toggl-Jira Sync CLI
 
-A CLI tool to sync time entries from Toggl Track to Jira work logs.
+A CLI tool to sync time entries from Toggl Track to Jira work logs. Created together with Claude code.
 
 ## Features
 
@@ -19,6 +19,30 @@ A CLI tool to sync time entries from Toggl Track to Jira work logs.
 
 ```bash
 npm install -g toggl-jira-sync
+```
+
+#### Set environment Variables
+
+Provide configuration via environment variables. See the configuration section bellow to know how to get them.
+
+```bash
+# Run with all required environment variables
+TOGGL_API_TOKEN="your-toggl-token" \
+TOGGL_WORKSPACE_ID="workspace-id" \
+TOGGL_PROJECT_ID="project-id" \
+JIRA_API_TOKEN="your-jira-token" \
+JIRA_EMAIL="your-email@example.com" \
+JIRA_DOMAIN="your-domain.atlassian.net" \
+toggl-jira-sync
+
+# Or export them first
+export TOGGL_API_TOKEN="your-toggl-token"
+export TOGGL_WORKSPACE_ID="workspace-id"
+export TOGGL_PROJECT_ID="project-id"
+export JIRA_API_TOKEN="your-jira-token"
+export JIRA_EMAIL="your-email@example.com"
+export JIRA_DOMAIN="your-domain.atlassian.net"
+toggl-jira-sync
 ```
 
 ### From source
@@ -146,11 +170,11 @@ If you encounter "400 Bad Request" errors when creating work logs:
 
 1. **Verify Issue Access**: Make sure the Jira issue exists and you have permission to log work on it
 
-3. **Check Issue Status**: Some Jira workflows prevent work logging on closed or certain status issues
+2. **Check Issue Status**: Some Jira workflows prevent work logging on closed or certain status issues
 
-4. **Date Format Issues**: The tool automatically formats dates to ISO format (e.g., `2024-01-01T10:30:00.000Z`) which should work with all Jira instances
+3. **Date Format Issues**: The tool automatically formats dates to ISO format (e.g., `2024-01-01T10:30:00.000Z`) which should work with all Jira instances
 
-5. **Test with Dry Run**: Use `--dry-run` flag first to verify the tool can fetch and parse your Toggl entries correctly
+4. **Test with Dry Run**: Use `--dry-run` flag first to verify the tool can fetch and parse your Toggl entries correctly
 
 ### Common Issues
 
