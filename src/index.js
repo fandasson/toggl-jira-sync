@@ -6,7 +6,7 @@ import dayjs from 'dayjs';
 import inquirer from 'inquirer';
 import Table from 'cli-table3';
 
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
@@ -217,7 +217,30 @@ async function configCommand() {
   console.log(`  API Token: ${config.jira.apiToken ? '***' + config.jira.apiToken.slice(-4) : 'Not set'}`);
   console.log(`  Email: ${config.jira.email || 'Not set'}`);
   console.log(`  Domain: ${config.jira.domain || 'Not set'}`);
-  console.log('\n' + chalk.yellow('To update configuration, please edit the .env file.'));
+  
+  console.log('\n' + chalk.yellow('Configuration methods:'));
+  console.log('1. Create a .env file in your current directory');
+  console.log('2. Set environment variables directly');
+  
+  const envExamplePath = join(process.cwd(), '.env.example');
+  const hasEnvExample = existsSync(envExamplePath);
+  
+  if (!hasEnvExample && existsSync(join(process.cwd(), '.env'))) {
+    console.log('\n' + chalk.green('✓ .env file found in current directory'));
+  } else if (!existsSync(join(process.cwd(), '.env'))) {
+    console.log('\n' + chalk.yellow('No .env file found in current directory.'));
+    console.log('Create one with the following content:');
+    console.log(chalk.gray(`
+# Toggl Configuration
+TOGGL_API_TOKEN=your_toggl_api_token_here
+TOGGL_WORKSPACE_ID=your_workspace_id_here
+TOGGL_PROJECT_ID=your_project_id_here
+
+# Jira Configuration
+JIRA_API_TOKEN=your_jira_api_token_here
+JIRA_EMAIL=your_email@company.com
+JIRA_DOMAIN=yourcompany.atlassian.net`));
+  }
 }
 
 async function historyViewCommand() {
