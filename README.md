@@ -63,7 +63,7 @@ npm install -g toggl-jira-sync
 ### Sync today's entries
 ```bash
 # If installed globally via npm
-toggl-jira sync
+toggl-jira-sync
 
 # If running from source
 node src/index.js sync
@@ -72,7 +72,7 @@ node src/index.js sync
 ### Sync specific date range
 ```bash
 # If installed globally via npm
-toggl-jira sync --from 2024-01-01 --to 2024-01-31
+toggl-jira-sync --from 2024-01-01 --to 2024-01-31
 
 # If running from source
 node src/index.js sync --from 2024-01-01 --to 2024-01-31
@@ -81,7 +81,7 @@ node src/index.js sync --from 2024-01-01 --to 2024-01-31
 ### Dry run (preview without creating work logs)
 ```bash
 # If installed globally via npm
-toggl-jira sync --dry-run
+toggl-jira-sync --dry-run
 
 # If running from source
 node src/index.js sync --dry-run
@@ -90,7 +90,7 @@ node src/index.js sync --dry-run
 ### Show configuration
 ```bash
 # If installed globally via npm
-toggl-jira config
+toggl-jira-sync config
 
 # If running from source
 node src/index.js config
@@ -99,10 +99,10 @@ node src/index.js config
 ### Manage sync history
 ```bash
 # View sync history statistics
-toggl-jira history:view  # (or node src/index.js history:view from source)
+toggl-jira-sync history:view  # (or node src/index.js history:view from source)
 
 # Clear all sync history (requires confirmation)
-toggl-jira history:clear  # (or node src/index.js history:clear from source)
+toggl-jira-sync history:clear  # (or node src/index.js history:clear from source)
 ```
 
 ## How it works
