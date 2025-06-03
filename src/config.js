@@ -1,11 +1,24 @@
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { existsSync } from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-dotenv.config({ path: join(__dirname, '..', '.env') });
+// Try to load .env file from current working directory first (for npm-installed usage)
+const cwdEnvPath = join(process.cwd(), '.env');
+const localEnvPath = join(__dirname, '..', '.env');
+
+if (existsSync(cwdEnvPath)) {
+  dotenv.config({ path: cwdEnvPath });
+} else if (existsSync(localEnvPath)) {
+  // Fallback to local .env file (for development)
+  dotenv.config({ path: localEnvPath });
+} else {
+  // No .env file found, will rely on environment variables
+  dotenv.config();
+}
 
 export const config = {
   toggl: {
