@@ -23,7 +23,7 @@ npm install -g toggl-jira-sync
 
 #### Set environment Variables
 
-Provide configuration via environment variables. See the configuration section bellow to know how to get them.
+Provide configuration via environment variables. See the configuration section below to know how to get them.
 
 ```bash
 # Run with all required environment variables
