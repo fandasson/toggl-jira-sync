@@ -4,7 +4,7 @@
   "description": "CLI tool to sync Toggl Track time entries to Jira work logs",
   "main": "src/index.js",
   "bin": {
-    "toggl-jira": "./src/index.js"
+    "toggl-jira-sync": "./src/index.js"
   },
   "type": "module",
   "scripts": {
