@@ -1,7 +1,9 @@
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration.js';
+import utc from 'dayjs/plugin/utc.js';
 
 dayjs.extend(duration);
+dayjs.extend(utc);
 
 export function formatDuration(seconds) {
   const dur = dayjs.duration(seconds, 'seconds');
@@ -28,9 +30,57 @@ export function formatJiraWorkLog(issueKey, entries) {
   };
 }
 
+export function formatJiraWorkLogWithBreakdown(issueKey, entries, date) {
+  const totalSeconds = entries.reduce((sum, entry) => sum + entry.durationSeconds, 0);
+  
+  // Create detailed breakdown of time entries
+  const timeBreakdown = entries.map(entry => {
+    const startTime = dayjs.utc(entry.startedAt).format('HH:mm');
+    const endTime = dayjs.utc(entry.startedAt).add(entry.durationSeconds, 'seconds').format('HH:mm');
+    const duration = formatDuration(entry.durationSeconds);
+    
+    return {
+      timeRange: `${startTime}-${endTime}`,
+      duration: duration,
+      description: entry.description || '(No description)'
+    };
+  });
+  
+  // Create the comment with detailed breakdown
+  const comment = formatDetailedComment(timeBreakdown, totalSeconds, entries.length);
+  
+  return {
+    issueKey,
+    date,
+    timeSpentSeconds: totalSeconds,
+    timeSpentFormatted: formatDuration(totalSeconds),
+    startedAt: entries[0].startedAt,
+    comment: comment,
+    entryCount: entries.length,
+    timeBreakdown: timeBreakdown
+  };
+}
+
+function formatDetailedComment(timeBreakdown, totalSeconds, entryCount) {
+  // Create a formatted comment with time breakdown
+  let comment = `Time breakdown for ${entryCount} ${entryCount === 1 ? 'entry' : 'entries'}:\n\n`;
+  
+  timeBreakdown.forEach(entry => {
+    comment += `• ${entry.timeRange} (${entry.duration}): ${entry.description}\n`;
+  });
+  
+  comment += `\nTotal: ${formatDuration(totalSeconds)}`;
+  
+  return comment;
+}
+
 export function prepareSummaryData(jiraEntries, nonJiraEntries, alreadySyncedEntries = {}) {
-  const jiraSummary = Object.entries(jiraEntries).map(([issueKey, group]) => {
-    return formatJiraWorkLog(issueKey, group.entries);
+  const jiraSummary = Object.entries(jiraEntries).map(([key, group]) => {
+    // Handle both old format (issueKey only) and new format (issueKey_date)
+    if (group.date) {
+      return formatJiraWorkLogWithBreakdown(group.issueKey, group.entries, group.date);
+    }
+    return formatJiraWorkLog(group.issueKey, group.entries);
   });
 
   const nonJiraSummary = nonJiraEntries.map(group => ({
