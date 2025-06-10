@@ -6,7 +6,8 @@ A CLI tool to sync time entries from Toggl Track to Jira work logs. Created toge
 
 - Fetches time entries from Toggl Track for a specific workspace and project
 - Extracts Jira issue IDs from time entry descriptions (e.g., "ABC-123: Working on feature")
-- Groups time entries by Jira issue key
+- **Daily aggregation** - Groups time entries by Jira issue AND date for better time visibility
+- **Detailed time breakdowns** - Each work log shows when work was done throughout the day
 - Shows summary of time entries with and without Jira issues
 - Creates work logs in Jira with confirmation prompt
 - Dry-run mode to preview changes without creating work logs
@@ -134,15 +135,31 @@ toggl-jira-sync history:clear  # (or node src/index.js history:clear from source
 1. The tool fetches time entries from Toggl for the specified date range
 2. It filters out entries that have already been synced (stored in local `.sync-history.json`)
 3. It parses each remaining entry's description looking for Jira issue keys (e.g., ABC-123)
-4. Entries with Jira keys are grouped by issue
+4. **Entries with Jira keys are grouped by issue AND date** for daily aggregation
 5. A summary table is displayed showing:
    - Already synced entries (ignored)
-   - Work logs to be created in Jira
+   - Work logs to be created in Jira (grouped by issue/date with entry count)
    - Time entries without Jira issue keys
    - Total time breakdown
 6. You're prompted to confirm before creating work logs in Jira
-7. Work logs are created in batch with results displayed
+7. Work logs are created with **detailed time breakdowns** showing when work happened
 8. Successfully synced entries are saved to local history to prevent re-syncing
+
+### Work Log Format in Jira
+
+Each work log includes a detailed breakdown of your time entries:
+
+```
+Time breakdown for 3 entries:
+
+• 09:00-09:30 (30m): Morning standup and planning
+• 10:15-11:00 (45m): Bug investigation and analysis  
+• 14:00-15:15 (1h 15m): Implementation and testing
+
+Total: 2h 30m
+```
+
+This preserves the exact timing of when work was performed, making time tracking more accurate and transparent.
 
 ## Testing
 
