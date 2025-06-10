@@ -22,23 +22,29 @@ export class JiraClient {
 
   async createWorkLog(issueKey, timeSpentSeconds, startedAt, comment = '') {
     try {
+      // Handle multi-line comments by splitting into paragraphs
+      const commentLines = comment.split('\n').filter(line => line.trim());
+      const content = commentLines.map(line => ({
+        type: 'paragraph',
+        content: [{
+          text: line,
+          type: 'text'
+        }]
+      }));
+      
       const payload = {
         timeSpentSeconds,
         started: dayjs(startedAt).utc().format('YYYY-MM-DDTHH:mm:ss.SSS') + '+0000',
         comment: {
           type: 'doc',
           version: 1,
-          content: [
-            {
-              type: 'paragraph',
-              content: [
-                {
-                  text: comment || 'Logged from Toggl Track',
-                  type: 'text'
-                }
-              ]
-            }
-          ]
+          content: content.length > 0 ? content : [{
+            type: 'paragraph',
+            content: [{
+              text: 'Logged from Toggl Track',
+              type: 'text'
+            }]
+          }]
         }
       };
 

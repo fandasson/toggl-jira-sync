@@ -1,4 +1,4 @@
-import { extractJiraIssueKey, parseTimeEntry, groupEntriesByDescription, groupEntriesByIssueKey } from '../src/utils/parser.js';
+import { extractJiraIssueKey, parseTimeEntry, groupEntriesByDescription, groupEntriesByIssueKey, groupEntriesByIssueKeyAndDate } from '../src/utils/parser.js';
 
 describe('extractJiraIssueKey', () => {
   test('extracts valid Jira issue keys', () => {
@@ -133,5 +133,141 @@ describe('groupEntriesByIssueKey', () => {
 
     const grouped = groupEntriesByIssueKey(entries);
     expect(Object.keys(grouped)).toHaveLength(0);
+  });
+});
+
+describe('groupEntriesByIssueKeyAndDate', () => {
+  test('groups entries by issue key and date', () => {
+    const entries = [
+      {
+        issueKey: 'ABC-123',
+        durationSeconds: 1800,
+        startedAt: '2024-01-01T10:00:00Z',
+        description: 'Morning work'
+      },
+      {
+        issueKey: 'ABC-123',
+        durationSeconds: 900,
+        startedAt: '2024-01-01T14:00:00Z',
+        description: 'Afternoon work'
+      },
+      {
+        issueKey: 'ABC-123',
+        durationSeconds: 3600,
+        startedAt: '2024-01-02T09:00:00Z',
+        description: 'Next day work'
+      },
+      {
+        issueKey: 'DEF-456',
+        durationSeconds: 1800,
+        startedAt: '2024-01-01T11:00:00Z',
+        description: 'Different issue'
+      }
+    ];
+
+    const grouped = groupEntriesByIssueKeyAndDate(entries);
+    
+    expect(Object.keys(grouped)).toHaveLength(3);
+    
+    // Check ABC-123 on 2024-01-01
+    expect(grouped['ABC-123_2024-01-01']).toBeDefined();
+    expect(grouped['ABC-123_2024-01-01'].issueKey).toBe('ABC-123');
+    expect(grouped['ABC-123_2024-01-01'].date).toBe('2024-01-01');
+    expect(grouped['ABC-123_2024-01-01'].totalSeconds).toBe(2700);
+    expect(grouped['ABC-123_2024-01-01'].entries).toHaveLength(2);
+    
+    // Check ABC-123 on 2024-01-02
+    expect(grouped['ABC-123_2024-01-02']).toBeDefined();
+    expect(grouped['ABC-123_2024-01-02'].issueKey).toBe('ABC-123');
+    expect(grouped['ABC-123_2024-01-02'].date).toBe('2024-01-02');
+    expect(grouped['ABC-123_2024-01-02'].totalSeconds).toBe(3600);
+    expect(grouped['ABC-123_2024-01-02'].entries).toHaveLength(1);
+    
+    // Check DEF-456 on 2024-01-01
+    expect(grouped['DEF-456_2024-01-01']).toBeDefined();
+    expect(grouped['DEF-456_2024-01-01'].issueKey).toBe('DEF-456');
+    expect(grouped['DEF-456_2024-01-01'].date).toBe('2024-01-01');
+    expect(grouped['DEF-456_2024-01-01'].totalSeconds).toBe(1800);
+  });
+
+  test('sorts entries within each group by start time', () => {
+    const entries = [
+      {
+        issueKey: 'ABC-123',
+        durationSeconds: 900,
+        startedAt: '2024-01-01T14:00:00Z',
+        description: 'Later entry'
+      },
+      {
+        issueKey: 'ABC-123',
+        durationSeconds: 1800,
+        startedAt: '2024-01-01T10:00:00Z',
+        description: 'Earlier entry'
+      },
+      {
+        issueKey: 'ABC-123',
+        durationSeconds: 600,
+        startedAt: '2024-01-01T12:00:00Z',
+        description: 'Middle entry'
+      }
+    ];
+
+    const grouped = groupEntriesByIssueKeyAndDate(entries);
+    const group = grouped['ABC-123_2024-01-01'];
+    
+    expect(group.entries[0].description).toBe('Earlier entry');
+    expect(group.entries[1].description).toBe('Middle entry');
+    expect(group.entries[2].description).toBe('Later entry');
+  });
+
+  test('ignores entries without issue key', () => {
+    const entries = [
+      {
+        issueKey: null,
+        durationSeconds: 1000,
+        startedAt: '2024-01-01T10:00:00Z'
+      },
+      {
+        issueKey: undefined,
+        durationSeconds: 500,
+        startedAt: '2024-01-01T11:00:00Z'
+      },
+      {
+        issueKey: 'ABC-123',
+        durationSeconds: 1800,
+        startedAt: '2024-01-01T12:00:00Z'
+      }
+    ];
+
+    const grouped = groupEntriesByIssueKeyAndDate(entries);
+    expect(Object.keys(grouped)).toHaveLength(1);
+    expect(grouped['ABC-123_2024-01-01']).toBeDefined();
+  });
+
+  test('handles entries with same issue key across multiple dates', () => {
+    const entries = [
+      {
+        issueKey: 'ABC-123',
+        durationSeconds: 1800,
+        startedAt: '2024-01-01T10:00:00Z'
+      },
+      {
+        issueKey: 'ABC-123',
+        durationSeconds: 3600,
+        startedAt: '2024-01-02T10:00:00Z'
+      },
+      {
+        issueKey: 'ABC-123',
+        durationSeconds: 2700,
+        startedAt: '2024-01-03T10:00:00Z'
+      }
+    ];
+
+    const grouped = groupEntriesByIssueKeyAndDate(entries);
+    
+    expect(Object.keys(grouped)).toHaveLength(3);
+    expect(grouped['ABC-123_2024-01-01'].totalSeconds).toBe(1800);
+    expect(grouped['ABC-123_2024-01-02'].totalSeconds).toBe(3600);
+    expect(grouped['ABC-123_2024-01-03'].totalSeconds).toBe(2700);
   });
 });
