@@ -45,3 +45,4 @@ tmp/
 
 # AI Agents
 .claude/*.local.*
+*.local.md
