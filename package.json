@@ -1,6 +1,6 @@
 {
   "name": "toggl-jira-sync",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "CLI tool to sync Toggl Track time entries to Jira work logs",
   "main": "src/index.js",
   "bin": {
