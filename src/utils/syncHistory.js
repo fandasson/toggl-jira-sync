@@ -1,11 +1,8 @@
 import { readFileSync, writeFileSync, existsSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { join } from 'path';
+import { homedir } from 'os';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const HISTORY_FILE = join(__dirname, '../../.sync-history.json');
+const HISTORY_FILE = join(homedir(), '.toggl-jira-history.json');
 
 export class SyncHistory {
   constructor() {
