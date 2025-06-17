@@ -6,7 +6,7 @@ vitest.config.js
 # Development files
 .env
 .env.example
-.sync-history.json
+.toggl-jira-history.json
 
 # CI/CD
 .github/

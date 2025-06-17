@@ -40,9 +40,6 @@ build/
 temp/
 tmp/
 
-# Sync history
-.sync-history.json
-
 # AI Agents
 .claude/*.local.*
 *.local.md

@@ -5,7 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.1.0] - 2025-01-06
+## [1.2.0] - 2025-06-17
+Storing file with sync history in user home directory. The file is newly named `.toggl-jira-history.json`. The previous
+solution store the file in the current working directory. There could be even multiple files in case you run this command
+from different directories. This change ensures that the sync history is stored in a single, consistent location.
+
+**NOTE**: to keep existing history, copy the old file named `.sync-history.json` from the previous location to the new one. 
+
+### Changed
+- **Sync history file location**: Changed from current working directory to user home directory
+- **Sync history file name**: Changed from `.sync-history.json` to `.toggl-jira-history.json`
+
+## [1.1.0] - 2025-06-10
 Maintained backward compatibility with existing sync history
 
 ### Added

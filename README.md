@@ -133,7 +133,7 @@ toggl-jira-sync history:clear  # (or node src/index.js history:clear from source
 ## How it works
 
 1. The tool fetches time entries from Toggl for the specified date range
-2. It filters out entries that have already been synced (stored in local `.sync-history.json`)
+2. It filters out entries that have already been synced (stored in local `~/.toggl-jira-history.json`)
 3. It parses each remaining entry's description looking for Jira issue keys (e.g., ABC-123)
 4. **Entries with Jira keys are grouped by issue AND date** for daily aggregation
 5. A summary table is displayed showing:
@@ -201,4 +201,4 @@ If you encounter "400 Bad Request" errors when creating work logs:
 
 ## Note on Sync History
 
-The tool automatically tracks synced entries in `.sync-history.json` to prevent duplicate work logs. This file is gitignored and stays local to your machine. You can safely run the sync multiple times without worrying about creating duplicate entries in Jira.
+The tool automatically tracks synced entries in `~/.toggl-jira-history.json` to prevent duplicate work logs. This file is gitignored and stays local to your machine. You can safely run the sync multiple times without worrying about creating duplicate entries in Jira.
