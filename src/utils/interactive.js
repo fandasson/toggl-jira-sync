@@ -35,7 +35,8 @@ export async function promptForJiraAssignment(groupedNonJiraEntries, jiraClient)
         choices: [
           { name: 'Assign to Jira issue', value: 'assign' },
           { name: 'Skip this group', value: 'skip' }
-        ]
+        ],
+        default: 1
       }
     ]);
 
