@@ -16,6 +16,7 @@ import { JiraClient } from './api/jira.js';
 import { parseTimeEntry, groupEntriesByDescription, groupEntriesByIssueKeyAndDate } from './utils/parser.js';
 import { prepareSummaryData, formatDuration } from './utils/formatter.js';
 import { SyncHistory } from './utils/syncHistory.js';
+import { promptForJiraAssignment, convertUnassignedToJiraEntries } from './utils/interactive.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -146,10 +147,32 @@ async function syncCommand(options) {
     const groupedAlreadySynced = syncHistory.groupSyncedEntriesByIssue(alreadySyncedEntries);
 
     // Prepare summary
-    const summary = prepareSummaryData(groupedJiraEntries, groupedNonJiraEntries, groupedAlreadySynced);
+    let summary = prepareSummaryData(groupedJiraEntries, groupedNonJiraEntries, groupedAlreadySynced);
 
     // Display summary
     await displaySummary(summary);
+
+    // Initialize Jira client for validation and work log creation
+    const jiraClient = new JiraClient();
+
+    // Handle unassigned entries if any exist
+    if (groupedNonJiraEntries.length > 0 && !options.dryRun) {
+      // Prompt for assignments
+      const assignments = await promptForJiraAssignment(groupedNonJiraEntries, jiraClient);
+      
+      if (assignments.length > 0) {
+        // Convert assignments to Jira entries and merge with existing
+        const assignedJiraEntries = convertUnassignedToJiraEntries(assignments);
+        Object.assign(groupedJiraEntries, assignedJiraEntries);
+        
+        // Recalculate summary with newly assigned entries
+        summary = prepareSummaryData(groupedJiraEntries, [], groupedAlreadySynced);
+        
+        // Display updated summary
+        console.log('\n' + chalk.bold('=== UPDATED SUMMARY ==='));
+        await displaySummary(summary);
+      }
+    }
 
     if (summary.jiraWorkLogs.length === 0) {
       console.log('\n' + chalk.yellow('No Jira work logs to create.'));
@@ -178,7 +201,6 @@ async function syncCommand(options) {
 
     // Create work logs in Jira
     console.log('\n' + chalk.cyan('Creating work logs in Jira...'));
-    const jiraClient = new JiraClient();
     const results = await jiraClient.batchCreateWorkLogs(summary.jiraWorkLogs);
 
     // Display results

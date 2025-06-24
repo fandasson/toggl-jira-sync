@@ -157,6 +157,7 @@ describe('Module Loading Tests', () => {
     const { SyncHistory } = await import('../src/utils/syncHistory.js');
     const { extractJiraIssueKey, parseTimeEntry } = await import('../src/utils/parser.js');
     const { formatDuration, prepareSummaryData } = await import('../src/utils/formatter.js');
+    const { promptForJiraAssignment, validateAndAssignIssueKey, convertUnassignedToJiraEntries } = await import('../src/utils/interactive.js');
 
     expect(TogglClient).toBeDefined();
     expect(JiraClient).toBeDefined();
@@ -165,6 +166,9 @@ describe('Module Loading Tests', () => {
     expect(parseTimeEntry).toBeDefined();
     expect(formatDuration).toBeDefined();
     expect(prepareSummaryData).toBeDefined();
+    expect(promptForJiraAssignment).toBeDefined();
+    expect(validateAndAssignIssueKey).toBeDefined();
+    expect(convertUnassignedToJiraEntries).toBeDefined();
   });
 
   test('can instantiate classes without config', async () => {
@@ -180,8 +184,23 @@ describe('Module Loading Tests', () => {
   test('utility functions work correctly', async () => {
     const { extractJiraIssueKey } = await import('../src/utils/parser.js');
     const { formatDuration } = await import('../src/utils/formatter.js');
+    const { convertUnassignedToJiraEntries } = await import('../src/utils/interactive.js');
 
     expect(extractJiraIssueKey('ABC-123: Test task')).toBe('ABC-123');
     expect(formatDuration(3600)).toBe('1h 0m');
+    
+    // Test interactive utility
+    const assignments = [
+      {
+        issueKey: 'TEST-123',
+        entries: [
+          { id: 1, description: 'Test work', durationSeconds: 3600, startedAt: '2024-01-01T10:00:00Z' }
+        ]
+      }
+    ];
+    const result = convertUnassignedToJiraEntries(assignments);
+    expect(result['TEST-123_2024-01-01']).toBeDefined();
+    expect(result['TEST-123_2024-01-01'].issueKey).toBe('TEST-123');
+    expect(result['TEST-123_2024-01-01'].totalSeconds).toBe(3600);
   });
 });
